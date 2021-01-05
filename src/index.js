@@ -1,24 +1,57 @@
-import React from 'react';
+import React, {Component} from 'react';
 import ReactDOM from 'react-dom';
 import App from './components/App';
 import reportWebVitals from './reportWebVitals';
-import {BrowserRouter as Router, Switch, Route} from "react-router-dom";
+import {BrowserRouter as Router, Switch, Route, withRouter} from "react-router-dom";
 import Login from "./components/Auth/Login";
 import Register from "./components/Auth/Register";
 import 'semantic-ui-css/semantic.min.css';
+import firebase from "./firebase";
+import {createStore} from "redux";
+import {connect, Provider} from 'react-redux';
+import {composeWithDevTools} from "redux-devtools-extension";
+import rootReducer from "./redux/reducers";
+import {setUser} from "./redux/actions";
+import Spinner from "./components/Spinner";
 
-const Root = () => (
-    <Router>
-        <Switch>
-            <Route path='/' exact component={App}/>
-            <Route path='/login' component={Login}/>
-            <Route path='/register' component={Register}/>
-        </Switch>
-    </Router>
-);
+const store = createStore(rootReducer, composeWithDevTools());
+
+class Root extends Component {
+
+
+    componentDidMount() {
+        firebase.auth().onAuthStateChanged(user => {
+            if (user) {
+                this.props.setUser(user)
+                this.props.history.push('/');
+            }
+        })
+    }
+
+    render() {
+        return this.props.isLoading ? <Spinner/> : (
+                <Switch>
+                    <Route path='/' exact component={App}/>
+                    <Route path='/login' component={Login}/>
+                    <Route path='/register' component={Register}/>
+                </Switch>
+        );
+    }
+}
+
+const mapStateToProps = state => ({
+    isLoading: state.user.isLoading
+});
+const mapDispatchToProps = {setUser};
+
+const RootWihAuth = withRouter(connect(mapStateToProps, mapDispatchToProps)(Root));
 
 ReactDOM.render(
-  <Root/>,
+    <Provider store={store}>
+        <Router>
+            <RootWihAuth/>
+        </Router>
+    </Provider>,
   document.getElementById('root')
 );
 
