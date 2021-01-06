@@ -8,6 +8,9 @@ import MetaPanel from "./MetaPanel/MetaPanel";
 import {connect} from "react-redux";
 
 function App({currentUser}) {
+
+    if (!currentUser) return null;
+
     return (
         <Grid columns='equal' className='app' style={{background: '#eee'}}>
             <ColorPanel/>

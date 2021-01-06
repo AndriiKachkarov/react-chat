@@ -14,7 +14,7 @@ export default class Register extends Component {
         passwordConfirmation: '',
         errors: [],
         loading: false,
-        usersRef: firebase.database().ref()
+        usersRef: firebase.database().ref('users')
     };
 
     handleChange = event => {

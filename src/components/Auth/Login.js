@@ -21,7 +21,6 @@ export default class Login extends Component {
     handleSubmit = event => {
         event.preventDefault(this.state);
         if (this.isFormValid(this.state)) {
-            console.log('test')
 
             this.setState({loading: true});
             firebase

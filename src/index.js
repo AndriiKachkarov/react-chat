@@ -26,17 +26,18 @@ class Root extends Component {
                 this.props.history.push('/');
             } else {
                 this.props.clearUser();
-                this.props.history.push('login');
+                this.props.history.push('/login');
             }
         })
     }
 
     render() {
+        console.log(this.props.location)
         return this.props.isLoading ? <Spinner/> : (
                 <Switch>
-                    <Route path='/' exact component={App}/>
                     <Route path='/login' component={Login}/>
                     <Route path='/register' component={Register}/>
+                    <Route exact path='/' component={App}/>
                 </Switch>
         );
     }
