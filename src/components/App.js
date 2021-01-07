@@ -18,7 +18,7 @@ function App({currentUser, currentChannel}) {
                 key={currentUser && currentUser.uid}
                 currentUser={currentUser}
             />
-            <Grid.Column style={{marginLeft: 320}}>
+            <Grid.Column style={{marginLeft: 320, maxWidth: 600}}>
                 <Messages
                     key={currentChannel && currentChannel.id}
                     currentChannel={currentChannel}
