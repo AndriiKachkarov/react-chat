@@ -12,7 +12,13 @@ export default class Messages extends Component {
         channel: this.props.currentChannel,
         user: this.props.currentUser,
         messages: [],
-        messagesLoading: true
+        messagesLoading: true,
+        numUniqueUsers: '',
+        searchTerm: '',
+        searchLoading: false,
+        searchResults: [],
+        privateChannel: this.props.isPrivateChannel,
+        privateMessagesRef: firebase.database().ref('privateMessages')
     };
 
     componentDidMount() {
@@ -29,9 +35,11 @@ export default class Messages extends Component {
 
     addMessageListener = channelId => {
         const loadedMessages = [];
-        this.state.messagesRef.child(channelId).on('child_added', snap => {
+        const ref = this.getMessagesRef();
+        ref.child(channelId).on('child_added', snap => {
             loadedMessages.push(snap.val());
-            this.setState({messages: loadedMessages, messagesLoading: false})
+            this.setState({messages: loadedMessages, messagesLoading: false});
+            this.countUniqueUsers(loadedMessages);
         });
     };
 
@@ -45,17 +53,63 @@ export default class Messages extends Component {
         ))
     );
 
+    displayChannelName = channel => {
+        return channel ? `${this.state.privateChannel ? '@' : '#'}${channel.name}` : '';
+    };
+
+    countUniqueUsers = messages => {
+        const uniqueUsers =messages.reduce((acc, message) => {
+            if (!acc.includes(message.user.name)) {
+                acc.push(message.user.name);
+            }
+            return acc;
+        }, []);
+        const plural = uniqueUsers.length === 1 ? 'user' : 'users'
+        const numUniqueUsers = `${uniqueUsers.length} ${plural}`;
+        this.setState({
+            numUniqueUsers
+        });
+    };
+
+    getMessagesRef = () => {
+        const {messagesRef, privateMessagesRef, privateChannel} = this.state;
+        return privateChannel ? privateMessagesRef : messagesRef;
+    };
+
+    handleSearchChange = event => {
+        this.setState({
+            searchTerm: event.target.value,
+            searchLoading: true
+        }, this.handleSearchMessages);
+    };
+
+    handleSearchMessages = () => {
+        const channelMessages = [...this.state.messages];
+        const regexp = new RegExp(this.state.searchTerm, 'gi');
+        const  searchResults = channelMessages.filter(message => (message.content &&
+            message.content.match(regexp) ||
+            message.user.name.match(regexp)
+        ));
+        this.setState({searchResults});
+        setTimeout(() => this.setState({searchLoading: false}), 1000);
+    };
 
     render() {
-        const {messagesRef, channel, user, messages} = this.state;
+        const {messagesRef, channel, user, messages, numUniqueUsers, searchTerm, searchResults, searchLoading, privateChannel} = this.state;
 
         return (
             <>
-                <MessagesHeader/>
+                <MessagesHeader
+                    channelName={this.displayChannelName(channel)}
+                    numUniqueUsers={numUniqueUsers}
+                    handleSearchChange={this.handleSearchChange}
+                    searchLoading={searchLoading}
+                    isPrivateChannel={privateChannel}
+                />
 
                 <Segment>
                     <CommentGroup className='messages'>
-                        {this.displayMessages(messages)}
+                        {searchTerm ? this.displayMessages(searchResults) : this.displayMessages(messages)}
                     </CommentGroup>
                 </Segment>
 
@@ -63,6 +117,8 @@ export default class Messages extends Component {
                     messagesRef={messagesRef}
                     currentChannel={channel}
                     currentUser={user}
+                    isPrivateChannel={privateChannel}
+                    getMessagesRef={this.getMessagesRef}
                 />
             </>
         )

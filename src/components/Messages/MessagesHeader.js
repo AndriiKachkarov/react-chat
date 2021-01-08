@@ -5,17 +5,22 @@ import HeaderSubHeader from "semantic-ui-react/dist/commonjs/elements/Header/Hea
 
 export default class MessagesHeader extends Component {
     render() {
+
+        const {channelName, numUniqueUsers, handleSearchChange, searchLoading, isPrivateChannel} = this.props;
+
         return (
             <Segment clearing>
                 <Header fluid='true' as='h2' floated='left' style={{marginBottom: 0}}>
                     <span>
-                        Channel
-                        <Icon name='star outline' color='black'/>
+                        {channelName}
+                        {!isPrivateChannel && <Icon name='star outline' color='black'/>}
                     </span>
-                    <HeaderSubHeader>2 Users</HeaderSubHeader>
+                    <HeaderSubHeader>{numUniqueUsers }</HeaderSubHeader>
                 </Header>
                 <Header floated='right'>
                     <Input
+                        loading={searchLoading}
+                        onChange={handleSearchChange}
                         size='mini'
                         icon='search'
                         name='searchTerm'

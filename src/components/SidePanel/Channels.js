@@ -14,7 +14,7 @@ import {
     ModalHeader
 } from "semantic-ui-react";
 import {connect} from "react-redux";
-import {setCurrentChannel} from "../../redux/actions";
+import {setCurrentChannel, setPrivateChannel} from "../../redux/actions";
 
 class Channels extends Component {
 
@@ -26,7 +26,7 @@ class Channels extends Component {
         channelsRef: firebase.database().ref('channels'),
         modal: false,
         firstLoad: true,
-        activeChannel: ''
+        activeChannel: '',
     };
 
     componentDidMount() {
@@ -46,7 +46,7 @@ class Channels extends Component {
     };
 
     removeListeners = () => {
-      this.state.channelsRef.off();
+        this.state.channelsRef.off();
     };
 
     setFirstChannel = () => {
@@ -106,7 +106,8 @@ class Channels extends Component {
 
     changeChannel = channel => {
         this.setActiveChannel(channel);
-      this.props.setCurrentChannel(channel);
+        this.props.setCurrentChannel(channel);
+        this.props.setPrivateChannel(false);
     };
 
     setActiveChannel = channel => {
@@ -117,15 +118,15 @@ class Channels extends Component {
 
     displayChannels = channels => (
         channels.length && channels.map(channel => (
-             <MenuItem
-                 key={channel.id}
-                 onClick={() => this.changeChannel(channel)}
-                 name={channel.name}
-                 style={{opacity: 0.7}}
-                 active={channel.id === this.state.activeChannel}
-             >
-                 # {channel.name}
-             </MenuItem>
+            <MenuItem
+                key={channel.id}
+                onClick={() => this.changeChannel(channel)}
+                name={channel.name}
+                style={{opacity: 0.7}}
+                active={channel.id === this.state.activeChannel}
+            >
+                # {channel.name}
+            </MenuItem>
         ))
     );
 
@@ -134,7 +135,7 @@ class Channels extends Component {
 
         return (
             <>
-                <MenuMenu style={{paddingBottom: '2em'}}>
+                <MenuMenu className='menu'>
                     <MenuItem>
                     <span>
                         <Icon name='exchange'/> CHANNELS
@@ -183,7 +184,8 @@ class Channels extends Component {
 }
 
 const setDispatchToProps = {
-    setCurrentChannel
+    setCurrentChannel,
+    setPrivateChannel
 };
 
 export default connect(null, setDispatchToProps)(Channels);
