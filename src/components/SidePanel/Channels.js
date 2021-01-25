@@ -170,7 +170,7 @@ class Channels extends Component {
     };
 
     displayChannels = channels => (
-        channels.length && channels.map(channel => (
+        channels.length > 0 && channels.map(channel => (
             <MenuItem
                 key={channel.id}
                 onClick={() => this.changeChannel(channel)}
@@ -213,7 +213,6 @@ class Channels extends Component {
                     </MenuItem>
                     {this.displayChannels(channels)}
                 </MenuMenu>
-
                 <Modal basic open={modal} onClose={this.closeModal}>
                     <ModalHeader>Add a channel</ModalHeader>
                     <ModalContent>
