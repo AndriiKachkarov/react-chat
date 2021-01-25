@@ -18,7 +18,8 @@ export default class Messages extends Component {
         searchLoading: false,
         searchResults: [],
         privateChannel: this.props.isPrivateChannel,
-        privateMessagesRef: firebase.database().ref('privateMessages')
+        privateMessagesRef: firebase.database().ref('privateMessages'),
+        listeners: []
     };
 
     componentDidMount() {
@@ -33,14 +34,19 @@ export default class Messages extends Component {
         this.addMessageListener(channelId)
     };
 
+    componentWillUnmount() {
+        this.state.listeners.forEach(ref => ref.off());
+    }
+
     addMessageListener = channelId => {
         const loadedMessages = [];
-        const ref = this.getMessagesRef();
-        ref.child(channelId).on('child_added', snap => {
+        const ref = this.getMessagesRef().child(channelId);
+        ref.on('child_added', snap => {
             loadedMessages.push(snap.val());
             this.setState({messages: loadedMessages, messagesLoading: false});
             this.countUniqueUsers(loadedMessages);
         });
+        this.setState({listeners: [...this.state.listeners, ref]});
     };
 
     displayMessages = messages => (
