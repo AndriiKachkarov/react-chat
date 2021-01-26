@@ -4,8 +4,10 @@ import MessagesHeader from "./MessagesHeader";
 import MessageForm from "./MessageForm";
 import firebase from "../../firebase";
 import Message from "./Message";
+import {connect} from "react-redux";
+import {setUserPosts} from "../../redux/actions";
 
-export default class Messages extends Component {
+class Messages extends Component {
 
     state = {
         messagesRef: firebase.database().ref('messages'),
@@ -48,6 +50,7 @@ export default class Messages extends Component {
             loadedMessages.push(snap.val());
             this.setState({messages: loadedMessages, messagesLoading: false});
             this.countUniqueUsers(loadedMessages);
+            this.countUserPosts(loadedMessages);
         });
         this.setState({listeners: [...this.state.listeners, ref]});
     };
@@ -68,6 +71,21 @@ export default class Messages extends Component {
             })
     };
 
+    countUserPosts = messages => {
+        const userPosts = messages.reduce((acc, message) => {
+            if (message.user.name in acc) {
+                acc[message.user.name].count += 1;
+            } else {
+                acc[message.user.name] = {
+                    avatar: message.user.avatar,
+                    count: 1
+                }
+            }
+            return acc;
+        }, {});
+        this.props.setUserPosts(userPosts);
+    };
+
     displayMessages = messages => (
         messages.length && messages.map(message => (
             <Message
@@ -83,7 +101,7 @@ export default class Messages extends Component {
     };
 
     countUniqueUsers = messages => {
-        const uniqueUsers =messages.reduce((acc, message) => {
+        const uniqueUsers = messages.reduce((acc, message) => {
             if (!acc.includes(message.user.name)) {
                 acc.push(message.user.name);
             }
@@ -143,7 +161,7 @@ export default class Messages extends Component {
     handleSearchMessages = () => {
         const channelMessages = [...this.state.messages];
         const regexp = new RegExp(this.state.searchTerm, 'gi');
-        const  searchResults = channelMessages.filter(message => (message.content &&
+        const searchResults = channelMessages.filter(message => (message.content &&
             message.content.match(regexp) ||
             message.user.name.match(regexp)
         ));
@@ -183,3 +201,5 @@ export default class Messages extends Component {
         )
     }
 }
+
+export default connect(null, { setUserPosts })(Messages);
