@@ -32,7 +32,6 @@ class Root extends Component {
     }
 
     render() {
-        console.log(this.props.location)
         return this.props.isLoading ? <Spinner/> : (
                 <Switch>
                     <Route path='/login' component={Login}/>
