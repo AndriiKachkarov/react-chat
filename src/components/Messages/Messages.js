@@ -22,7 +22,6 @@ class Messages extends Component {
         privateChannel: this.props.isPrivateChannel,
         privateMessagesRef: firebase.database().ref('privateMessages'),
         usersRef: firebase.database().ref('users'),
-        listeners: [],
         isChannelStarred: false
     };
 
@@ -39,9 +38,6 @@ class Messages extends Component {
         this.addMessageListener(channelId)
     };
 
-    componentWillUnmount() {
-        this.state.listeners.forEach(ref => ref.off());
-    }
 
     addMessageListener = channelId => {
         const loadedMessages = [];
@@ -52,7 +48,6 @@ class Messages extends Component {
             this.countUniqueUsers(loadedMessages);
             this.countUserPosts(loadedMessages);
         });
-        this.setState({listeners: [...this.state.listeners, ref]});
     };
 
     addUserStarsList = (channelId, userId) => {
