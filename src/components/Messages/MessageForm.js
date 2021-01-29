@@ -18,6 +18,7 @@ export default class MessageForm extends Component {
         uploadState: '',
         uploadTask: null,
         storageRef: firebase.storage().ref(),
+        typingRef: firebase.database().ref('typing'),
         percentUploaded: 0
     };
 
@@ -31,6 +32,22 @@ export default class MessageForm extends Component {
 
     handleChange = event => {
         this.setState({[event.target.name]: event.target.value});
+    };
+
+    handleKeyDown = () => {
+        const {message, typingRef, channel, user} = this.state;
+
+        if (message) {
+            typingRef
+                .child(channel.id)
+                .child(user.uid)
+                .set(user.displayName);
+        } else {
+            typingRef
+                .child(channel.id)
+                .child(user.uid)
+                .remove();
+        }
     };
 
     createMessage = (fileUrl = null) => {
@@ -53,7 +70,7 @@ export default class MessageForm extends Component {
 
     sendMessage = () => {
         const {getMessagesRef} = this.props;
-        const {message, channel} = this.state;
+        const {message, channel, user, typingRef} = this.state;
 
         if (message) {
             this.setState({loading: true});
@@ -62,7 +79,11 @@ export default class MessageForm extends Component {
                 .push()
                 .set(this.createMessage())
                 .then(() => {
-                    this.setState({loading: false, message: '', errors: []})
+                    this.setState({loading: false, message: '', errors: []});
+                    typingRef
+                        .child(channel.id)
+                        .child(user.uid)
+                        .remove();
                 })
                 .catch(err => {
                     this.setState({
@@ -123,23 +144,23 @@ export default class MessageForm extends Component {
     };
 
     sendFileMessage = (fileUrl, ref, pathToUpload) => {
-      ref.child(pathToUpload)
-          .push()
-          .set(this.createMessage(fileUrl))
-          .then(() => {
-              this.setState({
-                  uploadState: 'done'
-              });
-          })
-          .catch(err => {
-              this.setState({
-                  errors: this.state.errors.concat(err),
-              });
-          })
+        ref.child(pathToUpload)
+            .push()
+            .set(this.createMessage(fileUrl))
+            .then(() => {
+                this.setState({
+                    uploadState: 'done'
+                });
+            })
+            .catch(err => {
+                this.setState({
+                    errors: this.state.errors.concat(err),
+                });
+            })
     };
 
     render() {
-        const {errors, message, loading, modal, uploadState,  percentUploaded} = this.state;
+        const {errors, message, loading, modal, uploadState, percentUploaded} = this.state;
 
         return (
             <Segment className='message__form'>
@@ -148,6 +169,7 @@ export default class MessageForm extends Component {
                     name='message'
                     value={message}
                     onChange={this.handleChange}
+                    onKeyDown={this.handleKeyDown}
                     style={{marginBottom: '0.7em'}}
                     label={<Button icon='add'/>}
                     labelPosition='left'

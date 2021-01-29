@@ -1,6 +1,4 @@
 import * as actionTypes from './types';
-import {act} from "@testing-library/react";
-
 
 export const setUser = user => {
     return {
