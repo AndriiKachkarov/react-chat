@@ -4,6 +4,8 @@ import firebase from "../../firebase";
 import FileModal from "./FileModal";
 import uuidv4 from 'uuid/v4';
 import ProgressBar from "./ProgressBar";
+import 'emoji-mart/css/emoji-mart.css'
+import {emojiIndex, Picker} from "emoji-mart";
 
 
 export default class MessageForm extends Component {
@@ -19,7 +21,8 @@ export default class MessageForm extends Component {
         uploadTask: null,
         storageRef: firebase.storage().ref(),
         typingRef: firebase.database().ref('typing'),
-        percentUploaded: 0
+        percentUploaded: 0,
+        emojiPicker: false
     };
 
     openModal = () => {
@@ -34,7 +37,11 @@ export default class MessageForm extends Component {
         this.setState({[event.target.name]: event.target.value});
     };
 
-    handleKeyDown = () => {
+    handleKeyDown = event => {
+        if (event.ctrlKey && event.keyCode === 13) {
+            this.sendMessage();
+        }
+
         const {message, typingRef, channel, user} = this.state;
 
         if (message) {
@@ -159,19 +166,61 @@ export default class MessageForm extends Component {
             })
     };
 
+    handleTogglePicker = () => {
+        this.setState({ emojiPicker: !this.state.emojiPicker});
+    };
+
+    handleAddEmoji = emoji => {
+        const oldMessage = this.state.message;
+        const newMessage = this.colonToUnicode(` ${oldMessage} ${emoji.colons} `);
+        this.setState({ message: newMessage, emojiPicker: false});
+        setTimeout(() => this.messageInputRef.focus(), 0);
+    };
+
+    colonToUnicode = message => {
+        return message.replace(/:[A-Za-z0-9_+-]+:/g, x => {
+            x = x.replace(/:/g, "");
+            let emoji = emojiIndex.emojis[x];
+            if (typeof emoji !== "undefined") {
+                let unicode = emoji.native;
+                if (typeof unicode !== "undefined") {
+                    return unicode;
+                }
+            }
+            x = ":" + x + ":";
+            return x;
+        });
+    };
+
     render() {
-        const {errors, message, loading, modal, uploadState, percentUploaded} = this.state;
+        const {errors, message, loading, modal, uploadState, percentUploaded, emojiPicker} = this.state;
 
         return (
             <Segment className='message__form'>
+                {emojiPicker && (
+                    <Picker
+                        set='apple'
+                        onSelect={this.handleAddEmoji}
+                        className='emoji-picker'
+                        title='Pick your emoji'
+                        emoji='point_up'
+                    />
+                )}
                 <Input
                     fluid
                     name='message'
                     value={message}
+                    ref={node => this.messageInputRef = node}
                     onChange={this.handleChange}
                     onKeyDown={this.handleKeyDown}
                     style={{marginBottom: '0.7em'}}
-                    label={<Button icon='add'/>}
+                    label={
+                        <Button
+                            icon={emojiPicker ? 'close' : 'add'}
+                            content={emojiPicker ? 'close' : null}
+                            onClick={this.handleTogglePicker}
+                        />
+                    }
                     labelPosition='left'
                     placeholder='write your message'
                     className={
